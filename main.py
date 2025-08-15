@@ -1,4 +1,3 @@
-import os, getpass
 from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
@@ -7,29 +6,7 @@ from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from langchain.chat_models import init_chat_model
 
-
-
 load_dotenv()
-
-os.environ["LANGSMITH_TRACING"] = "true"
-if "LANGSMITH_API_KEY" not in os.environ:
-    os.environ["LANGSMITH_API_KEY"] = getpass.getpass(
-        prompt="Enter your LangSmith API key (optional): "
-    )
-if "LANGSMITH_PROJECT" not in os.environ:
-    os.environ["LANGSMITH_PROJECT"] = getpass.getpass(
-        prompt='Enter your LangSmith Project Name (default = "default"): '
-    )
-    if not os.environ.get("LANGSMITH_PROJECT"):
-        os.environ["LANGSMITH_PROJECT"] = "default"
-
-
-
-
-
-model = init_chat_model("gemini-2.5-flash", model_provider="google_genai", temperature=0.5)
-
-
 
 class Ally_Response(BaseModel):
     """Response from the ally character."""
@@ -39,11 +16,11 @@ class Enemy_Response(BaseModel):
     """Response from the enemy character."""
     suspicion: float = Field(description="Suspicion level of the enemy's interpretation", ge=0.0, le=1.0)
 
+model = init_chat_model("gemini-2.5-flash", model_provider="google_genai", temperature=0.5)
 
 structured_ally_model = model.with_structured_output(Ally_Response)
 
 structured_enemy_model = model.with_structured_output(Enemy_Response)
-
 
 npc_prompt_template = PromptTemplate.from_template(
 """
@@ -97,7 +74,6 @@ CONTEXT:
 """
 )
 
-
 conversation_history = ""
 mission = {
     "npc_personality": "Polite but cautious, easily distracted",
@@ -117,7 +93,7 @@ def evaluate(ally_confidence: float, enemy_suspicion: float):
 ally_confidence: float = 0.0
 enemy_suspicion: float = 0.0
 
-for turn in range(3):
+for turn in range(5):
 
     npc_prompt = npc_prompt_template.invoke(
         {
