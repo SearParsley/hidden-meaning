@@ -1,9 +1,6 @@
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from pydantic import BaseModel, Field
-from langchain_core.tools import tool
 from langchain.chat_models import init_chat_model
 
 load_dotenv()
@@ -16,11 +13,17 @@ class Enemy_Response(BaseModel):
     """Response from the enemy character."""
     suspicion: float = Field(description="Suspicion level of the enemy's interpretation", ge=0.0, le=1.0)
 
-model = init_chat_model("gemini-2.5-flash", model_provider="google_genai", temperature=0.5)
+class LLM:
+    model = init_chat_model("gemini-2.5-flash", model_provider="google_genai", temperature=0.5)
+    structured_ally_model = model.with_structured_output(Ally_Response)
+    structured_enemy_model = model.with_structured_output(Enemy_Response)
 
-structured_ally_model = model.with_structured_output(Ally_Response)
 
-structured_enemy_model = model.with_structured_output(Enemy_Response)
+
+
+
+
+
 
 npc_prompt_template = PromptTemplate.from_template(
 """
@@ -104,7 +107,7 @@ for turn in range(5):
         }
     )
 
-    npc_response = model.invoke(npc_prompt).content
+    npc_response = LLM.model.invoke(npc_prompt).content
 
     print(f"NPC: {npc_response}")
     conversation_history += f"NPC: {npc_response}\n"
@@ -119,7 +122,7 @@ for turn in range(5):
         }
     )
 
-    ally_confidence = structured_ally_model.invoke(ally_prompt).model_dump().get("confidence")
+    ally_confidence = LLM.structured_ally_model.invoke(ally_prompt).model_dump().get("confidence")
 
     print(f"Ally confidence: {ally_confidence}")
 
@@ -129,7 +132,7 @@ for turn in range(5):
         }
     )
 
-    enemy_suspicion = structured_enemy_model.invoke(enemy_prompt).model_dump().get("suspicion")
+    enemy_suspicion = LLM.structured_enemy_model.invoke(enemy_prompt).model_dump().get("suspicion")
 
     print(f"Enemy suspicion: {enemy_suspicion}")
 
