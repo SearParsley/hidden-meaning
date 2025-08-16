@@ -54,7 +54,6 @@ class LLM:
     _structured_ally_model = model.with_structured_output(Ally_Response)
     _structured_enemy_model = model.with_structured_output(Enemy_Response)
 
-    @staticmethod
     def get_ally_confidence(conversation_history: str, hidden_message: str):
         ally_prompt = LLM._ally_prompt_template.invoke(
             {
@@ -64,7 +63,6 @@ class LLM:
         )
         return LLM._structured_ally_model.invoke(ally_prompt).model_dump().get("confidence")
 
-    @staticmethod
     def get_enemy_suspicion(conversation_history: str):
         enemy_prompt = LLM._enemy_prompt_template.invoke(
             {
@@ -75,26 +73,45 @@ class LLM:
 
 
 
-npc_prompt_template = PromptTemplate.from_template(textwrap.dedent(
-    """
-    INSTRUCTION:
+class NPC:
+    """Represents a non-player character (NPC) in the game."""
 
-    You are an NPC in a spy conversation game.
-    Personality: {npc_personality}.
-    Cover Topic: {cover_topic}.
-    Avoid talking about espionage or danger unless suspicious.
+    _npc_prompt_template = PromptTemplate.from_template(textwrap.dedent(
+        """
+        INSTRUCTION:
 
-    If the player uses forbidden words: {forbidden_words},
-    react with mild suspicion.
+        You are an NPC in a spy conversation game.
+        Personality: {npc_personality}.
+        Cover Topic: {cover_topic}.
+        Avoid talking about espionage or danger unless suspicious.
 
-    You do not know the hidden message. Keep conversation natural but probe if the player sounds odd.
-    Respond naturally as the NPC would.
+        If the player uses forbidden words: {forbidden_words},
+        react with mild suspicion.
 
-    CONTEXT (may be empty):
-    {conversation_history}
-    """
-    ).strip())
+        You do not know the hidden message. Keep conversation natural but probe if the player sounds odd.
+        Respond naturally as the NPC would.
 
+        CONTEXT (may be empty):
+        {conversation_history}
+        """
+        ).strip())
+
+    def __init__(self, personality: str, cover_topic: str, forbidden_words: list[str]):
+        self.personality = personality
+        self.cover_topic = cover_topic
+        self.forbidden_words = forbidden_words
+
+    def get_response(self, conversation_history: str) -> str:
+        npc_prompt = NPC._npc_prompt_template.invoke(
+            {
+                "npc_personality": self.personality,
+                "cover_topic": self.cover_topic,
+                "forbidden_words": self.forbidden_words,
+                "conversation_history": conversation_history
+            }
+        )
+
+        return LLM.model.invoke(npc_prompt).content
 
 
 conversation_history = ""
@@ -113,21 +130,15 @@ def evaluate(ally_confidence: float, enemy_suspicion: float):
     else:
         return "FAIL"
 
-ally_confidence: float = 0.0
-enemy_suspicion: float = 0.0
+npc = NPC(
+    personality=mission["npc_personality"],
+    cover_topic=mission["cover_topic"],
+    forbidden_words=mission["forbidden_words"]
+)
 
 for turn in range(5):
 
-    npc_prompt = npc_prompt_template.invoke(
-        {
-            "npc_personality": mission["npc_personality"],
-            "cover_topic": mission["cover_topic"],
-            "forbidden_words": mission["forbidden_words"],
-            "conversation_history": conversation_history
-        }
-    )
-
-    npc_response = LLM.model.invoke(npc_prompt).content
+    npc_response = npc.get_response(conversation_history)
 
     print(f"NPC: {npc_response}")
     conversation_history += f"NPC: {npc_response}\n"
