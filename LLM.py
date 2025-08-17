@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
-from langchain.chat_models import init_chat_model
 from Conversation import Conversation
+from langchain.chat_models import init_chat_model
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import textwrap
 
