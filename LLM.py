@@ -1,8 +1,8 @@
 from pydantic import BaseModel, Field
 from langchain.chat_models import init_chat_model
-from Mission import Mission
-import textwrap
+from Conversation import Conversation
 from dotenv import load_dotenv
+import textwrap
 
 class Ally_Response(BaseModel):
     """Response from the ally character."""
@@ -23,17 +23,17 @@ class LLM:
     __structured_ally_model = model.with_structured_output(Ally_Response)
     __structured_enemy_model = model.with_structured_output(Enemy_Response)
 
-    def invoke_third_parties(self, mission: Mission, conversation_history: str) -> tuple[float, float, list[str]]:
+    def invoke_third_parties(self, conversation: Conversation) -> tuple[float, float, list[str]]:
         """Invoke third-party assessments of the conversation. Returns ally confidence, enemy suspicion, enemy suspicious phrases."""
-        ally_response_info = self.__invoke_ally(mission, conversation_history).model_dump()
-        enemy_response_info = self.__invoke_enemy(mission, conversation_history).model_dump()
+        ally_response_info = self.__invoke_ally(conversation).model_dump()
+        enemy_response_info = self.__invoke_enemy(conversation).model_dump()
         return (
             ally_response_info.get("confidence"),
             enemy_response_info.get("suspicion_level"),
             enemy_response_info.get("suspicious_phrases")
         )
 
-    def __invoke_ally(self, mission: Mission, conversation_history: str) -> Ally_Response:
+    def __invoke_ally(self, conversation: Conversation) -> Ally_Response:
        return self.__structured_ally_model.invoke(
             textwrap.dedent(
                 f"""
@@ -52,15 +52,15 @@ class LLM:
                 Rate your confidence in your interpretation from 0.0 to 1.0.
 
                 MISSION OBJECTIVE:
-                {mission.objective}
+                {conversation.get_mission().objective}
 
                 CONVERSATION HISTORY:
-                {conversation_history}
+                {conversation.get_history()}
                 """
             ).strip()
         )
 
-    def __invoke_enemy(self, mission: Mission, conversation_history: str) -> Enemy_Response:
+    def __invoke_enemy(self, conversation: Conversation) -> Enemy_Response:
         return self.__structured_enemy_model.invoke(
             textwrap.dedent(
                 f"""
@@ -78,10 +78,10 @@ class LLM:
                 Rate your suspicion from 0.0 (no suspicion) to 1.0 (fully certain).
 
                 MISSION OBJECTIVE (for reference only):
-                {mission.objective}
+                {conversation.get_mission().objective}
 
                 CONVERSATION HISTORY:
-                {conversation_history}
+                {conversation.get_history()}
                 """
             ).strip()
         )
