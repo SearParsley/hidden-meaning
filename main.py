@@ -40,7 +40,10 @@ def main():
         print(f"{npc.name}: {npc_response}")
         conversation.add_turn(npc.name, npc_response)
 
-        (ally_confidence, enemy_suspicion, suspicious_phrases) = llm.invoke_third_parties(mission, conversation.get_history())
+        third_party_results = llm.invoke_third_parties(conversation)
+        ally_confidence = third_party_results.get("ally_confidence", 0.0)
+        enemy_suspicion = third_party_results.get("enemy_suspicion", 0.0)
+        suspicious_phrases = third_party_results.get("suspicious_phrases", [])
 
         print(f"Ally confidence: {ally_confidence}")
         print(f"Enemy suspicion: {enemy_suspicion}")

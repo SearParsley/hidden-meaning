@@ -23,15 +23,16 @@ class LLM:
     __structured_ally_model = model.with_structured_output(Ally_Response)
     __structured_enemy_model = model.with_structured_output(Enemy_Response)
 
-    def invoke_third_parties(self, conversation: Conversation) -> tuple[float, float, list[str]]:
-        """Invoke third-party assessments of the conversation. Returns ally confidence, enemy suspicion, enemy suspicious phrases."""
+    def invoke_third_parties(self, conversation: Conversation) -> dict[str, float | list[str]]:
+        """Invoke third-party assessments of the conversation. Returns a dictionary with keys:
+        'ally_confidence' (float), 'enemy_suspicion' (float), and 'suspicious_phrases' (list of strings)."""
         ally_response_info = self.__invoke_ally(conversation).model_dump()
         enemy_response_info = self.__invoke_enemy(conversation).model_dump()
-        return (
-            ally_response_info.get("confidence"),
-            enemy_response_info.get("suspicion_level"),
-            enemy_response_info.get("suspicious_phrases")
-        )
+        return {
+            "ally_confidence": ally_response_info.get("confidence"),
+            "enemy_suspicion": enemy_response_info.get("suspicion_level"),
+            "suspicious_phrases": enemy_response_info.get("suspicious_phrases")
+        }
 
     def __invoke_ally(self, conversation: Conversation) -> Ally_Response:
        return self.__structured_ally_model.invoke(
