@@ -28,6 +28,9 @@ class NPC:
                 Keep responses to 1-3 sentences maximum, so the flow feels like
                 a realistic dialogue.
 
+                Include only the dialogue text in your response, not the NPC
+                name or any other metadata.
+
                 NPC PROFILE:
                 - Name: {self.name}
                 - Personality: {self.personality}.
