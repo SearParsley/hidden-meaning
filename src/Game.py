@@ -18,7 +18,6 @@ class Game:
         return Mission(
             objective="Call for reinforcements",
             environment="A bustling city park during a weekend festival",
-            forbidden_words=["help", "assist", "support", "backup", "emergency"]
         )
     
     def play_mission(self, mission: Mission = None, npc: NPC = None):
