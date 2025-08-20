@@ -23,19 +23,21 @@ class LLM:
     __structured_ally_model = model.with_structured_output(Ally_Response)
     __structured_enemy_model = model.with_structured_output(Enemy_Response)
 
-    def invoke_third_parties(self, conversation: Conversation) -> dict[str, float | list[str]]:
+    @staticmethod
+    def invoke_third_parties(conversation: Conversation) -> dict[str, float | list[str]]:
         """Invoke third-party assessments of the conversation. Returns a dictionary with keys:
         'ally_confidence' (float), 'enemy_suspicion' (float), and 'suspicious_phrases' (list of strings)."""
-        ally_response_info = self.__invoke_ally(conversation).model_dump()
-        enemy_response_info = self.__invoke_enemy(conversation).model_dump()
+        ally_response_info = LLM.__invoke_ally(conversation).model_dump()
+        enemy_response_info = LLM.__invoke_enemy(conversation).model_dump()
         return {
             "ally_confidence": ally_response_info.get("confidence"),
             "enemy_suspicion": enemy_response_info.get("suspicion_level"),
             "suspicious_phrases": enemy_response_info.get("suspicious_phrases")
         }
 
-    def __invoke_ally(self, conversation: Conversation) -> Ally_Response:
-       return self.__structured_ally_model.invoke(
+    @staticmethod
+    def __invoke_ally(conversation: Conversation) -> Ally_Response:
+       return LLM.__structured_ally_model.invoke(
             textwrap.dedent(
                 f"""
                 INSTRUCTIONS:
@@ -61,8 +63,9 @@ class LLM:
             ).strip()
         )
 
-    def __invoke_enemy(self, conversation: Conversation) -> Enemy_Response:
-        return self.__structured_enemy_model.invoke(
+    @staticmethod
+    def __invoke_enemy(conversation: Conversation) -> Enemy_Response:
+        return LLM.__structured_enemy_model.invoke(
             textwrap.dedent(
                 f"""
                 INSTRUCTIONS:

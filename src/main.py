@@ -23,8 +23,6 @@ def main():
         personality="Friendly and talkative, but a little nosy"
     )
 
-    llm = LLM()
-
     conversation = Conversation(mission)
 
     print(f"Environment: {mission.environment}")
@@ -40,7 +38,7 @@ def main():
         print(f"{npc.name}: {npc_response}")
         conversation.add_turn(npc.name, npc_response)
 
-        third_party_results = llm.invoke_third_parties(conversation)
+        third_party_results = LLM.invoke_third_parties(conversation)
         ally_confidence = third_party_results.get("ally_confidence", 0.0)
         enemy_suspicion = third_party_results.get("enemy_suspicion", 0.0)
         suspicious_phrases = third_party_results.get("suspicious_phrases", [])
