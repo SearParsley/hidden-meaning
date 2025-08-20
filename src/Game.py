@@ -3,6 +3,7 @@ from Mission import Mission
 from NPCs import NPCs
 from NPC import NPC
 from LLM import LLM
+from environments import environments
 import random
 
 class Game:
@@ -14,10 +15,23 @@ class Game:
     
     def __generate_mission(self, difficulty: int = 1) -> Mission:
         """Generates a mission with predefined objectives and environment."""
-        # TODO: implement random mission generation based on difficulty
+        if difficulty < 1 or difficulty > 5:
+            raise ValueError("Mission difficulty must be between 1 and 5.")
+            
+        environment = random.choice(environments)
+        
+        # TODO: Generate objectives based on difficulty level
+        objectives = [
+            "Call for reinforcements",
+            "Arrange a secret meeting",
+            "Pass along classified information",
+            "Signal for extraction",
+            "Warn about an imminent threat"
+        ]
+        
         return Mission(
-            objective="Call for reinforcements",
-            environment="A bustling city park during a weekend festival",
+            objective=random.choice(objectives),
+            environment=environment
         )
     
     def play_mission(self, mission: Mission = None, npc: NPC = None):
@@ -33,17 +47,28 @@ class Game:
 
         conversation = Conversation(mission)
 
-        print(f"Environment: {mission.environment}")
+        print(f"\nEnvironment: {mission.environment.name} - {mission.environment.description}")
         print(f"Mission Objective: {mission.objective}")
         print(f"NPC: {npc.name} - {npc.personality}")
-
-        for turn in range(5):
-            player_input = input("You: ")
+        print(f"\nRules:")
+        print(f"- Maximum message length: {mission.environment.message_length_limit} words")
+        print(f"- Forbidden words: {', '.join(mission.environment.forbidden_words)}")
+        if mission.environment.noise_chance > 0:
+            print(f"- Message loss chance: {mission.environment.noise_chance * 100}%")
+        
+        max_turns = mission.environment.max_turns or 5
+        for turn in range(max_turns):
+            player_input = input("\nYou: ")
+            
+            valid, reason = mission.environment.validate_message(player_input, turn + 1)
+            if not valid:
+                print(f"\nWarning: {reason}")
+                
             conversation.add_turn("Player", player_input)
 
             npc_response = npc.get_response_text(conversation)
 
-            print(f"{npc.name}: {npc_response}")
+            print(f"\n{npc.name}: {npc_response}")
             conversation.add_turn(npc.name, npc_response)
 
             third_party_results = LLM.invoke_third_parties(conversation)
@@ -51,7 +76,7 @@ class Game:
             enemy_suspicion = third_party_results.get("enemy_suspicion", 0.0)
             suspicious_phrases = third_party_results.get("suspicious_phrases", [])
 
-            print(f"Ally confidence: {ally_confidence}")
+            print(f"\nAlly confidence: {ally_confidence}")
             print(f"Enemy suspicion: {enemy_suspicion}")
             print(f"Suspicious phrases: {suspicious_phrases}")
 
