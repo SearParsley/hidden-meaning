@@ -1,5 +1,6 @@
 from Conversation import Conversation
 from Mission import Mission
+from NPCs import NPCs
 from NPC import NPC
 from LLM import LLM
 import random
@@ -9,7 +10,7 @@ class Game:
     def initialize(self, mission_count: int = 1, npc_count: int = 1):
         """Initializes the game by generating a specified number of missions and NPCs."""
         self.missions = [self.__generate_mission() for _ in range(mission_count)]
-        self.npcs = [self.__generate_npc() for _ in range(npc_count)]
+        self.npcs = random.sample(NPCs.LIST, k=npc_count)
     
     def __generate_mission(self, difficulty: int = 1) -> Mission:
         """Generates a mission with predefined objectives and environment."""
@@ -18,14 +19,6 @@ class Game:
             objective="Call for reinforcements",
             environment="A bustling city park during a weekend festival",
             forbidden_words=["help", "assist", "support", "backup", "emergency"]
-        )
-    
-    def __generate_npc(self) -> NPC:
-        """Generates a non-player character (NPC) with predefined attributes."""
-        # TODO: implement random NPC generation
-        return NPC(
-            name="Clara",
-            personality="Friendly and talkative, but a little nosy"
         )
     
     def play_mission(self, mission: Mission = None, npc: NPC = None):
