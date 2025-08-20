@@ -37,6 +37,7 @@ class LLM:
 
     @staticmethod
     def __invoke_ally(conversation: Conversation) -> Ally_Response:
+       env = conversation.get_mission().environment
        return LLM.__structured_ally_model.invoke(
             textwrap.dedent(
                 f"""
@@ -45,14 +46,22 @@ class LLM:
                 conversation between the player and an NPC in order to detect
                 whether the player has successfully embedded a hidden message.
 
+                ENVIRONMENT CONTEXT:
+                - Location: {env.name}
+                - Description: {env.description}
+                - Message Rules:
+                  * Word Limit: {env.message_length_limit} words per message
+                  * Forbidden Words: {', '.join(env.forbidden_words)}
+                  * Noise Level: {int(env.noise_chance * 100)}% chance of message loss
+
                 Carefully read the conversation for any words or phrases that
-                appear to match or encode the mission objective.
+                appear to match or encode the mission objective, while considering:
+                - Whether the player stayed within message length limits
+                - If they avoided using forbidden words
+                - If their messages fit naturally in the environment's context
 
-                The player must embed the message in a way that seems natural
-                in context. Look for subtle or indirect phrasing that might
-                hide the objective.
-
-                Rate your confidence in your interpretation from 0.0 to 1.0.
+                Rate your confidence in your interpretation from 0.0 to 1.0,
+                where violations of environment rules should reduce confidence.
 
                 MISSION OBJECTIVE:
                 {conversation.get_mission().objective}
@@ -65,6 +74,7 @@ class LLM:
 
     @staticmethod
     def __invoke_enemy(conversation: Conversation) -> Enemy_Response:
+        env = conversation.get_mission().environment
         return LLM.__structured_enemy_model.invoke(
             textwrap.dedent(
                 f"""
@@ -73,13 +83,24 @@ class LLM:
                 a conversation between the player and an NPC. Your job is to
                 detect whether the player is trying to convey a hidden message.
 
-                Scrutinize the conversation for words, phrases, or patterns
-                that feel unnatural or suspicious.
+                ENVIRONMENT CONTEXT:
+                - Location: {env.name}
+                - Description: {env.description}
+                - Typical Message Length: Up to {env.message_length_limit} words
+                - Location-specific Keywords: {', '.join(env.forbidden_words)}
 
-                Pay attention to unusual word choice, repeated terms, or topics
-                that may seem forced into casual conversation.
+                Scrutinize the conversation for:
+                1. Messages that exceed typical length for this location
+                2. Unusual avoidance of common location-specific words
+                3. Speech patterns that don't match the environment
+                4. Topics that feel forced or out of place
+                5. Repeated terms or unnatural word choices
 
-                Rate your suspicion from 0.0 (no suspicion) to 1.0 (fully certain).
+                Consider the environment's noise level ({int(env.noise_chance * 100)}%)
+                when analyzing message patterns.
+
+                Rate your suspicion from 0.0 (no suspicion) to 1.0 (fully certain),
+                where obvious violations of location norms increase suspicion.
 
                 MISSION OBJECTIVE (for reference only):
                 {conversation.get_mission().objective}

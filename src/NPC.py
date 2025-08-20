@@ -11,6 +11,7 @@ class NPC:
 
     def get_response_text(self, conversation: Conversation) -> str:
         """Generates a response from the NPC based on the conversation history and mission parameters."""
+        env = conversation.get_mission().environment
         return LLM.model.invoke(
             textwrap.dedent(
                 f"""
@@ -25,16 +26,25 @@ class NPC:
                 Do not act overly suspicious unless the player says something
                 that feels very unnatural.
 
-                Keep responses to 1-3 sentences maximum, so the flow feels like
-                a realistic dialogue.
+                ENVIRONMENT RULES:
+                - Location: {env.name}
+                - Description: {env.description}
+                - Message Length Limit: {env.message_length_limit} words
+                - Forbidden Words: {', '.join(env.forbidden_words)}
+                - Noise Level: {int(env.noise_chance * 100)}% chance of message loss
+                - Other Rules: {', '.join(f"{k}: {v}" for k, v in env.special_rules.items()) if env.special_rules else "None"}
 
-                Include only the dialogue text in your response, not the NPC
-                name or any other metadata.
+                If the player:
+                - Uses forbidden words: React with subtle concern or confusion
+                - Exceeds word limit: Show mild impatience or distraction
+                - Uses suspicious phrases: Gradually become more guarded
+                
+                Keep your responses under {env.message_length_limit} words to match
+                the environment's restrictions.
 
                 NPC PROFILE:
                 - Name: {self.name}
-                - Personality: {self.personality}.
-                - Environment: {conversation.get_mission().environment}.
+                - Personality: {self.personality}
 
                 CONVERSATION HISTORY:
                 {conversation.get_history()}
