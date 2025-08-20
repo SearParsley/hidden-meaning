@@ -25,7 +25,7 @@ def main():
 
     llm = LLM()
 
-    conversation = Conversation(npc, mission)
+    conversation = Conversation(mission)
 
     print(f"Environment: {mission.environment}")
     print(f"Mission Objective: {mission.objective}")
@@ -35,7 +35,7 @@ def main():
         player_input = input("You: ")
         conversation.add_turn("Player", player_input)
 
-        npc_response = npc.get_response_text(conversation.get_history(), mission)
+        npc_response = npc.get_response_text(conversation)
 
         print(f"{npc.name}: {npc_response}")
         conversation.add_turn(npc.name, npc_response)
