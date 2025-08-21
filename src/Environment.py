@@ -19,14 +19,14 @@ class Environment:
             noise_chance (float): Chance (0.0-1.0) that a message is garbled/lost.
             special_rules (dict): Environment-specific constraints.
         """
-        self.name = name
-        self.description = description
-        self.max_turns = max_turns
-        self.forbidden_words = forbidden_words or []
-        self.message_length_limit = message_length_limit
-        self.cover_keywords = cover_keywords or []
-        self.noise_chance = noise_chance
-        self.special_rules = special_rules or {}
+        self.name: str = name
+        self.description: str = description
+        self.max_turns: int | None = max_turns
+        self.forbidden_words: list[str] = forbidden_words or []
+        self.message_length_limit: int | None = message_length_limit
+        self.cover_keywords: list[str] = cover_keywords or []
+        self.noise_chance: float = noise_chance
+        self.special_rules: dict[str, str] = special_rules or {}
 
     def validate_message(self, message: str, turn: int) -> tuple[bool, str]:
         """
