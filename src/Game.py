@@ -3,7 +3,7 @@ from Mission import Mission
 from NPCs import NPCs
 from NPC import NPC
 from LLM import LLM
-from environments import environments
+from Environments import environments
 import random
 
 class Game:
